@@ -1,10 +1,18 @@
 package de.hpi.movie.core
 
 trait Preparation[A] {
-	def normalize: Movie => Movie
+	import Preparation._
+
+	def normalize: Normalize
 }
 
 object Preparation {
-	def normalize[A](implicit p: Preparation[A]): Movie => Movie =
+	type Normalize = Movie => Movie
+
+	def normalize[A](implicit p: Preparation[A]): Normalize =
 		p.normalize
+
+	def normalizeRating(min: Double, max: Double): Normalize = {
+		movie => movie.copy(rating = (movie.rating - min) / (max - min))
+	}
 }

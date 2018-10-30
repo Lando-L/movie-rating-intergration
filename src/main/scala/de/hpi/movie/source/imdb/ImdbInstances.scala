@@ -1,14 +1,14 @@
 package de.hpi.movie.source.imdb
 
 import cats.data.Reader
-import de.hpi.movie.core.{Preparation, Movie, Normalization, Wrapper}
+import de.hpi.movie.core.{Preparation, Movie, Wrapper}
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 
 object ImdbInstances {
 	implicit val imdbIntegration: Preparation[Imdb] with Serializable =
 		new Preparation[Imdb] with Serializable {
 			override def normalize: Movie => Movie = {
-				Normalization.normalizeRating(0, 10)
+				Preparation.normalizeRating(1, 10)
 			}
 		}
 

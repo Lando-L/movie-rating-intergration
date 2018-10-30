@@ -1,14 +1,14 @@
 package de.hpi.movie.source.kaggle
 
 import cats.data.Reader
-import de.hpi.movie.core.{Preparation, Movie, Normalization, Wrapper}
+import de.hpi.movie.core.{Preparation, Movie, Wrapper}
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 
 object KaggleInstances {
 	implicit def kaggleIntegration: Preparation[Kaggle] with Serializable =
 		new Preparation[Kaggle] with Serializable {
 			override def normalize: Movie => Movie = {
-				Normalization.normalizeRating(0, 5)
+				Preparation.normalizeRating(1, 5)
 			}
 		}
 
