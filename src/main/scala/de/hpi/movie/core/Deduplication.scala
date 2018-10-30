@@ -1,5 +1,12 @@
 package de.hpi.movie.core
 
+trait Deduplication[A] {
+	type Score = (Movie, Movie) => Double
+
+	def score(weights: List[(Score, Double)]): (Movie, Movie) => Double =
+		{ case (m1, m2) => (weights foldLeft 0.0){ case (sum, (f, w)) => sum + f(m1, m2) * w }}
+}
+
 object Deduplication {
 	type Score = (Movie, Movie) => Double
 

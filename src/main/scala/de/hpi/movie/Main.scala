@@ -1,12 +1,14 @@
 package de.hpi.movie
 
-import de.hpi.movie.core.Integration
+import de.hpi.movie.core.{Integration, Movie}
 import de.hpi.movie.source.imdb.{Imdb, ImdbInstances}
+import de.hpi.movie.source.kaggle.{Kaggle, KaggleInstances}
 import org.apache.spark.sql.SparkSession
 
 object Main {
 	def main(args: Array[String]): Unit = {
 		import ImdbInstances._
+		import KaggleInstances._
 
 		val spark = SparkSession
 			.builder()
@@ -14,14 +16,13 @@ object Main {
 			.config("spark.master", "local")
 			.getOrCreate()
 
-		val is = Integration
-			.setup[Imdb](Map("ratingPath" -> "../imdb/title.ratings-10.tsv", "basicPath" -> "../imdb/title.basics-10.tsv"))
-			.run(spark)
+		import spark.implicits._
 
-		is.foreach(_.show())
+		val movies = for {
+			optImdb <- Integration.run[Imdb](Map("ratingPath" -> "../imdb/title.ratings.tsv", "basicPath" -> "../imdb/title.basics.tsv"))
+			optKaggle <- Integration.run[Kaggle](Map("ratingPath" -> "../kaggle/ratings_small.csv", "basicPath" -> "../kaggle/movies_metadata.csv"))
+		} yield List(optImdb, optKaggle).flatten.fold(spark.emptyDataset[Movie])(_ union _)
 
-		/*KaggleWrapper
-  		.load(spark)(Map("ratingPath" -> "../kaggle/ratings_small.csv", "basicPath" -> "../kaggle/movies_metadata.csv"))
-  		.foreach(_.show(10))*/
+		movies.run(spark).select("title", "rating").write.csv("../merged/")
 	}
 }
