@@ -7,8 +7,12 @@ import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 object MovieLensInstances {
 	implicit def movieLensPreparation: Preparation[MovieLens] with Serializable =
 		new Preparation[MovieLens] with Serializable {
+			def normalizeImdbId: Movie => Movie = {
+				movie => movie.copy(fk = movie.fk.get("imdb").fold(movie.fk)(id => movie.fk + ("imdb" -> ("tt" + id))))
+			}
+
 			override def normalize: Movie => Movie = {
-				Preparation.normalizeRating(1,5)
+				Preparation.normalizeRating(1,5) andThen normalizeImdbId
 			}
 		}
 

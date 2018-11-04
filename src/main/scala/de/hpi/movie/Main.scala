@@ -8,6 +8,7 @@ import org.apache.spark.sql.SparkSession
 
 object Main {
 	def main(args: Array[String]): Unit = {
+		import org.apache.spark.sql.functions._
 		import ImdbInstances._
 		import KaggleInstances._
 		import MovieLensInstances._
@@ -25,8 +26,19 @@ object Main {
 			optKaggle <- Integration.run[Kaggle](Map("ratingPath" -> "../kaggle/ratings_small.csv", "basicPath" -> "../kaggle/movies_metadata.csv"))
 			optMovieLens <- Integration.run[MovieLens](Map("moviesPath" -> "../movie_lens/movies.csv", "ratingsPath" -> "../movie_lens/ratings.csv", "linksPath" -> "../movie_lens/links.csv"))
 			merged = (List(optImdb, optKaggle, optMovieLens).flatten fold spark.emptyDataset[Movie])(_ union _)
-		} yield merged
+			aggregated = merged
+				.select(col("rating"), col("fk")("imdb").as("imdb"))
+				.groupBy("imdb")
+				.agg(avg("rating"))
+  			.withColumnRenamed("avg(rating)", "rating")
+			joined = optImdb.map {
+				_
+					.select(col("title"), col("fk")("imdb").as("imdb"))
+					.join(aggregated, "imdb")
+  				.select("title", "rating")
+			}
+		} yield joined
 
-		movies.run(spark).select("title", "rating").write.csv("../merged/")
+		movies.run(spark).foreach(_.write.csv("../merged"))
 	}
 }
