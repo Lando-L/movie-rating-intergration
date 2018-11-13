@@ -39,6 +39,6 @@ object Main {
 			}
 		} yield joined
 
-		movies.run(spark).foreach(_.write.csv("../merged"))
+		movies.run(spark).foreach(_.write.option("header", "true").csv("../merged"))
 	}
 }

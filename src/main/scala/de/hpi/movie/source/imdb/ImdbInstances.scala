@@ -21,8 +21,10 @@ object ImdbInstances {
 						for {
 							ratingPath <- config get "ratingPath"
 							basicPath <- config get "basicPath"
-							ratingDf = parseSource(ratingPath)(sparkSession).select("tconst", "averageRating")
-							basicDf = parseSource(basicPath)(sparkSession).select("tconst", "primaryTitle")
+							ratingDf = parseSource(ratingPath)(sparkSession)
+								.select("tconst", "averageRating")
+							basicDf = parseSource(basicPath)(sparkSession)
+								.select("tconst", "primaryTitle")
 							joined = ratingDf.join(basicDf, "tconst")
 						} yield joined.as[Imdb]
 			}
